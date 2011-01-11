@@ -38,6 +38,7 @@
         <copy todir="${dist.dir}" file="${build.dir}/${jar.name}"/>
         <copy todir="${dist.dir}" file="NOTICE.txt"/>
         <copy todir="${dist.dir}" file="LICENSE.txt"/>
+        <copy todir="${dist.dir}" file="README"/>
         <copy todir="${dist.dir}" file="build.xml"/>
         <copy todir="${dist.dir}/src">
             <fileset dir="src"/>
