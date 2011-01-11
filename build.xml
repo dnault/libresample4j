@@ -1,0 +1,50 @@
+<project name="libresample4j" default="jar">
+
+    <property name="version" value="1.0"/>
+    <property name="jar.name" value="${ant.project.name}-${version}.jar"/>
+
+    <property name="src.java.dir" location="src/java"/>
+    <property name="src.resource.dir" location="${src.java.dir}"/>
+
+    <property name="build.dir" location="target"/>
+    <property name="dest.classes.dir" location="${build.dir}/classes"/>
+
+    <property name="dist.dir" location="${build.dir}/dist"/>
+
+    <property name="javac.debug" value="on"/>
+
+    <target name="compile">
+        <mkdir dir="${dest.classes.dir}"/>
+
+        <javac srcdir="${src.java.dir}"
+               destdir="${dest.classes.dir}"
+               debug="${javac.debug}"
+               includeantruntime="false"
+               target="1.5"
+               source="1.5"/>
+    </target>
+
+    <target name="jar" depends="compile" description="Build the JAR">
+        <jar jarfile="${build.dir}/${jar.name}" basedir="${dest.classes.dir}"/>
+    </target>
+
+    <target name="clean" description="Remove all generated files">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="dist" depends="clean,jar" description="Build the distributable package">
+        <mkdir dir="${dist.dir}"/>
+
+        <copy todir="${dist.dir}" file="${build.dir}/${jar.name}"/>
+        <copy todir="${dist.dir}" file="NOTICE.txt"/>
+        <copy todir="${dist.dir}" file="LICENSE.txt"/>
+        <copy todir="${dist.dir}" file="build.xml"/>
+        <copy todir="${dist.dir}/src">
+            <fileset dir="src"/>
+        </copy>
+
+        <zip basedir="${dist.dir}" destfile="${build.dir}/${ant.project.name}-${version}.zip"/>
+    </target>
+
+
+</project>
