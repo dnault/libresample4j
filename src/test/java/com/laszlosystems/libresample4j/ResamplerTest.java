@@ -12,31 +12,72 @@
  *****************************************************************************/
 package com.laszlosystems.libresample4j;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
+
 import java.io.PrintWriter;
-import java.util.Formatter;
-import java.util.Locale;
 import java.util.Random;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 
-import static java.lang.Math.*;
-
+/**
+ * Sadly, this isn't a unit test. It's a straight port of testresample.c from the original libresample,
+ * preserving as much as possible of the original code and indentation.
+ */
 public class ResamplerTest {
-    public interface CLibrary extends Library {
-        CLibrary INSTANCE = (CLibrary)
-            Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLibrary.class);
-    
-        int rand();
+
+    private interface RandomIntGenerator {
+        int nextNonNegativeInt();
     }
 
-    static PrintWriter out;
-    
+    /**
+     * Use this implementation if you want to compare the output of this program
+     * with the output of libresample's "testresample" binary.
+     */
+    private static class NativeLibcRandomIntGenerator implements RandomIntGenerator {
+        private interface CLibrary extends Library {
+            CLibrary INSTANCE = (CLibrary)
+                    Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLibrary.class);
+
+            int rand();
+        }
+
+        public int nextNonNegativeInt() {
+            return CLibrary.INSTANCE.rand();
+        }
+    }
+
+    /**
+     * Use this implementation if NativeLibcRandomIntGenerator doesn't work on your system for some reason.
+     * The test output won't match the native "testresample" binary output, but maybe that's okay?
+     */
+    private static class JavaRandomIntGenerator implements RandomIntGenerator {
+        private final Random random = new Random(0);
+
+        public int nextNonNegativeInt() {
+            return random.nextInt() & ~(1 << 31);
+        }
+    }
+
+    private static final RandomIntGenerator randomIntGenerator = new NativeLibcRandomIntGenerator();
+    // private static final RandomIntGenerator randomIntGenerator = new JavaRandomIntGenerator();
+
+    private static final PrintWriter out = new PrintWriter(System.out);
+
+    private static int rand() {
+        return randomIntGenerator.nextNonNegativeInt();
+    }
+
+    private static void printf(String s, Object... args) {
+        out.print(String.format(s, args));
+        out.flush();
+    }
+
     public static void main(String... args) throws Exception {
-        //out = new PrintWriter(new FileWriter("/tmp/jtest.out"));
-        out = new PrintWriter(System.out);
-        
         int i, srclen, dstlen, ifreq;
         double factor;
 
@@ -87,31 +128,15 @@ public class ResamplerTest {
            dstlen = (int)(srclen * factor + 10);
            runtest(srclen, (double)ifreq, factor, srclen, dstlen);
         }
+    }
 
-        out.close();
-    }
-   
-    private static final Random random = new Random(0);
-    static private int rand() {
-        return CLibrary.INSTANCE.rand();//abs(random.nextInt());
-        
-    }
-    
-    static private void printf(String s, Object... args) {
-        StringBuilder sb = new StringBuilder();
-        Formatter formatter = new Formatter(sb, Locale.US);
-        formatter.format(s, args);
-        out.print(sb);
-        out.flush();
-    }
-    
     private static void runtest(int srclen, double freq, double factor, int srcblocksize, int dstblocksize)
 {
   int expectedlen = (int)(srclen * factor);
   int dstlen = expectedlen + 1000;
   float[] src = new float[srclen+100];
   float[] dst = new float[dstlen+100];
-  
+
   Resampler resampler;
   double sum, sumsq, err, rmserr;
   int i, out, o, srcused, errcount, rangecount;
@@ -140,15 +165,15 @@ public class ResamplerTest {
      Resampler.Result result = resampler.process(factor, src, srcpos, srcBlock,
                           lastFlag,
                           dst, out, min(dstlen-out, dstblocksize));
-     
+
      o = result.outputSamplesGenerated;
      srcused =  result.inputSamplesConsumed;
-     
+
      //o = resampler.process(factor,
      //                     &src[srcpos], srcBlock,
      //                     lastFlag, &srcused,
      //                     &dst[out], min(dstlen-out, dstblocksize));
-      
+
      srcpos += srcused;
      if (o >= 0)
         out += o;
@@ -170,7 +195,7 @@ public class ResamplerTest {
      printf("   Expected ~%d, got %d samples out\n",
             expectedlen, out);
   }
-  
+
   sum = 0.0;
   sumsq = 0.0;
   errcount = 0;
@@ -211,7 +236,7 @@ public class ResamplerTest {
   }
   err = sum / statlen;
   rmserr = sqrt(sumsq / statlen);
-  printf("   Out: %d samples  Avg err: %f RMS err: %f\n", out, err, rmserr);  
+  printf("   Out: %d samples  Avg err: %f RMS err: %f\n", out, err, rmserr);
 }
 
 }
