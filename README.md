@@ -4,3 +4,6 @@ Java port of Dominic Mazzoni's libresample 0.1.3, which is in turn based on Juli
 
 There's no documentation for the Java port, but for the most part it's just like the C version which you can read about here:
     https://ccrma.stanford.edu/~jos/resample/Free_Resampling_Software.html
+
+Also take a look at the C version's README which is bundled in the `libresample-0.1.3.tgz` archive.
+
