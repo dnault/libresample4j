@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dnault/libresample4j.svg?branch=master)](https://travis-ci.org/dnault/libresample4j)
+[![Build Status](https://travis-ci.org/dnault/libresample4j.svg?branch=main)](https://travis-ci.org/dnault/libresample4j)
 [![LGPL 2.1](https://img.shields.io/badge/license-LGPL%202.1-blue.svg)](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html#SEC1)
 ![Java 1.5+](https://img.shields.io/badge/java-1.7+-lightgray.svg)
 
